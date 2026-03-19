@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Communication.Api/Communication.Api.csproj" />
+  <Project Path="Communication.Application/Communication.Application.csproj" />
+  <Project Path="Communication.Domain/Communication.Domain.csproj" />
+  <Project Path="Communication.Infrastructure/Communication.Infrastructure.csproj" />
+  <Project Path="Communication.Worker/Communication.Worker.csproj" />
+</Solution>

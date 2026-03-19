@@ -1,0 +1,69 @@
+services:
+  communication.api:
+    build:
+      context: .
+      dockerfile: Communication.Api/Dockerfile
+    container_name: communication-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Server=communication.mysql;Port=3306;Database=communication;Uid=root;Pwd=862945;SslMode=None;AllowPublicKeyRetrieval=True;
+      RabbitMQ__Host: communication.rabbitmq
+    ports:
+      - "8081:8080"
+    depends_on:
+      communication.mysql:
+        condition: service_healthy
+      communication.rabbitmq:
+        condition: service_healthy
+
+  communication.mysql:
+    image: mysql:8.0
+    container_name: communication-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 862945
+      MYSQL_DATABASE: communication
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p862945"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  communication.worker:
+    build:
+      context: .
+      dockerfile: Communication.Worker/Dockerfile
+    container_name: communication-worker
+    environment:
+      RabbitMQ__Host: communication.rabbitmq
+      ConnectionStrings__DefaultConnection: Server=communication.mysql;Port=3306;Database=communication;Uid=root;Pwd=862945;SslMode=None;AllowPublicKeyRetrieval=True;
+      Email__Host: smtp.gmail.com
+      Email__Port: "587"
+      Email__Username: seu usuario
+      Email__Password: "sua senha"
+      Email__FromName: "Communication"
+    depends_on:
+      communication.mysql:
+        condition: service_healthy
+      communication.rabbitmq:
+        condition: service_healthy
+
+  communication.rabbitmq:
+    image: rabbitmq:3-management
+    container_name: communication-rabbitmq
+    restart: always
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql_data:
